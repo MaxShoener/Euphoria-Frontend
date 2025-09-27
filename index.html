@@ -4,65 +4,86 @@
 <meta charset="UTF-8">
 <title>Euphoria</title>
 <style>
-  body { font-family: sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
-  #controls { padding: 10px; background: #222; color: white; display: flex; gap: 5px; }
-  input[type=text] { flex: 1; padding: 5px; font-size: 16px; }
-  button { padding: 5px 10px; font-size: 16px; }
-  #output { flex: 1; background: #000; display: flex; align-items: center; justify-content: center; }
-  #browserFrame { max-width: 100%; max-height: 100%; }
+  body {
+    font-family: Arial, sans-serif;
+    background: #f9f9f9;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  header {
+    background: #2b2b2b;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+  }
+  #controls {
+    display: flex;
+    padding: 0.5rem;
+    background: #eee;
+  }
+  #urlInput {
+    flex: 1;
+    padding: 0.5rem;
+    font-size: 1rem;
+  }
+  button {
+    padding: 0.5rem 1rem;
+    margin-left: 0.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  #output {
+    flex: 1;
+    width: 100%;
+    border: none;
+  }
 </style>
 </head>
 <body>
+<header>Euphoria</header>
+
 <div id="controls">
-  <button id="back">◀</button>
-  <button id="forward">▶</button>
-  <input id="url" type="text" placeholder="Enter URL or search..." />
-  <button id="go">Go</button>
+  <input id="urlInput" type="text" placeholder="Enter URL or search query..." />
+  <button id="goBtn">Go</button>
+  <button id="backBtn">◀</button>
+  <button id="forwardBtn">▶</button>
 </div>
-<div id="output">
-  <img id="browserFrame" src="" alt="Browser output" />
-</div>
+
+<iframe id="output"></iframe>
 
 <script>
-let ws;
-const img = document.getElementById('browserFrame');
-const urlInput = document.getElementById('url');
-const goBtn = document.getElementById('go');
-const backBtn = document.getElementById('back');
-const forwardBtn = document.getElementById('forward');
+const BACKEND_URL = "https://wisp-server-w7nx.onrender.com"; // your backend
+const input = document.getElementById('urlInput');
+const output = document.getElementById('output');
+const goBtn = document.getElementById('goBtn');
+const backBtn = document.getElementById('backBtn');
+const forwardBtn = document.getElementById('forwardBtn');
 
-// Replace with your backend WebSocket
-const backendURL = "wss://wisp-server-w7nx.onrender.com"; 
+let historyStack = [];
+let historyIndex = -1;
 
-function connect() {
-    ws = new WebSocket(backendURL);
-    ws.onopen = () => console.log("Connected to backend");
-    ws.onmessage = (msg) => {
-        if(msg.data instanceof Blob) {
-            const url = URL.createObjectURL(msg.data);
-            img.src = url;
-        } else {
-            console.log("Backend message:", msg.data);
-        }
-    };
-    ws.onclose = () => setTimeout(connect, 3000);
-}
-connect();
+function loadURL(url) {
+  if (!/^https?:\/\//i.test(url)) {
+    url = 'https://www.google.com/search?q=' + encodeURIComponent(url);
+  }
 
-function sendCommand(command, value) {
-    if(ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ command, value }));
-    }
+  output.src = `${BACKEND_URL}/browse?url=${encodeURIComponent(url)}&t=${Date.now()}`;
+
+  // Manage history
+  if (historyIndex === -1 || historyStack[historyIndex] !== url) {
+    historyStack = historyStack.slice(0, historyIndex + 1);
+    historyStack.push(url);
+    historyIndex++;
+  }
 }
 
-goBtn.onclick = () => {
-    const val = urlInput.value.trim();
-    if(val.startsWith("http")) sendCommand("navigate", val);
-    else sendCommand("search", val);
-};
-urlInput.onkeypress = (e) => { if(e.key === "Enter") goBtn.click(); };
-backBtn.onclick = () => sendCommand("back");
-forwardBtn.onclick = () => sendCommand("forward");
+goBtn.onclick = () => loadURL(input.value.trim());
+input.addEventListener('keydown', e => { if(e.key === 'Enter') loadURL(input.value.trim()); });
+backBtn.onclick = () => { if(historyIndex>0) { historyIndex--; loadURL(historyStack[historyIndex]); } };
+forwardBtn.onclick = () => { if(historyIndex<historyStack.length-1) { historyIndex++; loadURL(historyStack[historyIndex]); } };
 </script>
 </body>
 </html>
