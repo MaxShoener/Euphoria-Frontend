@@ -3,61 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>Euphoria</title>
-  <style>
-    body { font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
-    #controls { padding: 10px; background: #222; color: white; display: flex; gap: 10px; }
-    #browser { flex: 1; border: none; width: 100%; }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="controls">
-    <button onclick="goBack()">◀ Back</button>
-    <button onclick="goForward()">▶ Forward</button>
-    <input id="url" type="text" placeholder="Enter URL or search..." style="flex:1">
-    <button onclick="go()">Go</button>
-  </div>
-  <iframe id="browser"></iframe>
-
-  <script>
-    let historyStack = [];
-    let currentIndex = -1;
-
-    async function go() {
-      const input = document.getElementById('url').value.trim();
-      if (!input) return;
-
-      const res = await fetch('/browse', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: input })
-      });
-
-      const html = await res.text();
-      const blob = new Blob([html], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-
-      const iframe = document.getElementById('browser');
-      iframe.src = url;
-
-      // Update history
-      historyStack = historyStack.slice(0, currentIndex + 1);
-      historyStack.push(url);
-      currentIndex++;
-    }
-
-    function goBack() {
-      if (currentIndex > 0) {
-        currentIndex--;
-        document.getElementById('browser').src = historyStack[currentIndex];
-      }
-    }
-
-    function goForward() {
-      if (currentIndex < historyStack.length - 1) {
-        currentIndex++;
-        document.getElementById('browser').src = historyStack[currentIndex];
-      }
-    }
-  </script>
+  <h1>Welcome to Euphoria</h1>
+  <a href="browse.html">Start Browsing</a>
 </body>
 </html>
