@@ -6,10 +6,9 @@
   <title>Euphoria Frontend</title>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      background-color: #000;
       color: #fff;
-      margin: 0;
+      font-family: monospace;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -20,45 +19,32 @@
 
     h1 {
       margin-bottom: 1rem;
-      font-size: 2.5rem;
-      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
     }
 
     button {
-      background-color: #ff4081;
-      border: none;
-      padding: 0.8rem 1.6rem;
-      font-size: 1rem;
+      background-color: #111;
       color: #fff;
-      border-radius: 8px;
+      border: 1px solid #fff;
+      padding: 0.5rem 1rem;
       cursor: pointer;
-      transition: 0.3s;
       margin-bottom: 1rem;
     }
 
     button:hover {
-      background-color: #e73370;
+      background-color: #222;
     }
 
     pre {
-      background: rgba(0,0,0,0.3);
+      background-color: #111;
       padding: 1rem;
-      border-radius: 10px;
+      border-radius: 5px;
       width: 100%;
       max-width: 600px;
       overflow-x: auto;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    }
-
-    footer {
-      margin-top: auto;
-      font-size: 0.9rem;
-      opacity: 0.8;
     }
 
     a {
-      color: #fff;
-      text-decoration: underline;
+      color: #0af;
     }
   </style>
 </head>
@@ -66,9 +52,7 @@
   <h1>Euphoria Frontend</h1>
   <button id="fetchBtn">Talk to Backend</button>
   <pre id="output">Click the button to fetch data from the backend.</pre>
-  <footer>
-    Backend hosted at: <a href="https://ideological-merna-maxshoener-af9383a9.koyeb.app/" target="_blank">https://ideological-merna-maxshoener-af9383a9.koyeb.app/</a>
-  </footer>
+  <p>Backend hosted at: <a href="https://ideological-merna-maxshoener-af9383a9.koyeb.app/" target="_blank">Link</a></p>
 
   <script>
     const backendUrl = "https://ideological-merna-maxshoener-af9383a9.koyeb.app/api/hello";
@@ -83,7 +67,7 @@
         const data = await res.json();
         output.textContent = JSON.stringify(data, null, 2);
       } catch (err) {
-        output.textContent = "Error: " + err.message;
+        output.textContent = "Error: " + err.message + "\n\n(Remember, file:/// pages may fail due to CORS.)";
       }
     });
   </script>
