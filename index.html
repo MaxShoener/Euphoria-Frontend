@@ -1,75 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Euphoria Frontend</title>
-  <style>
-    body {
-      background-color: #000;
-      color: #fff;
-      font-family: monospace;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      min-height: 100vh;
-      padding: 2rem;
-    }
+<meta charset="UTF-8">
+<title>Euphoria</title>
+<style>
+  /* === UI Styling === */
+  body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: black;
+    color: white;
+    font-family: monospace;
+  }
 
-    h1 {
-      margin-bottom: 1rem;
-    }
-
-    button {
-      background-color: #111;
-      color: #fff;
-      border: 1px solid #fff;
-      padding: 0.5rem 1rem;
-      cursor: pointer;
-      margin-bottom: 1rem;
-    }
-
-    button:hover {
-      background-color: #222;
-    }
-
-    pre {
-      background-color: #111;
-      padding: 1rem;
-      border-radius: 5px;
-      width: 100%;
-      max-width: 600px;
-      overflow-x: auto;
-    }
-
-    a {
-      color: #0af;
-    }
-  </style>
+  h1 { font-size: 3rem; margin-bottom: 1rem; }
+  button {
+    padding: 1rem 2rem;
+    background: #111;
+    color: white;
+    border: 1px solid white;
+    cursor: pointer;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s;
+  }
+  button:hover {
+    background: #222;
+    border-color: #aaa;
+  }
+  pre {
+    background: #000;
+    color: #0f0;
+    padding: 1rem;
+    width: 80%;
+    max-width: 600px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    border: 1px solid #0f0;
+  }
+</style>
 </head>
 <body>
-  <h1>Euphoria Frontend</h1>
-  <button id="fetchBtn">Talk to Backend</button>
-  <pre id="output">Click the button to fetch data from the backend.</pre>
-  <p>Backend hosted at: <a href="https://ideological-merna-maxshoener-af9383a9.koyeb.app/" target="_blank">Link</a></p>
+<h1>Euphoria</h1>
+<button id="fetchBtn">Fetch "hi" from Backend</button>
+<pre id="output">Click the button to see the response...</pre>
 
-  <script>
-    const backendUrl = "https://ideological-merna-maxshoener-af9383a9.koyeb.app/api/hello";
+<script>
+  // === Frontend JS ===
+  const backendURL = "https://ideological-merna-maxshoener-af9383a9.koyeb.app/api/hello";
 
-    document.getElementById("fetchBtn").addEventListener("click", async () => {
-      const output = document.getElementById("output");
-      output.textContent = "Fetching...";
+  const output = document.getElementById("output");
+  const button = document.getElementById("fetchBtn");
 
-      try {
-        const res = await fetch(backendUrl);
-        if (!res.ok) throw new Error(res.status + " " + res.statusText);
-        const data = await res.json();
-        output.textContent = JSON.stringify(data, null, 2);
-      } catch (err) {
-        output.textContent = "Error: " + err.message + "\n\n(Remember, file:/// pages may fail due to CORS.)";
-      }
-    });
-  </script>
+  // Fetch function
+  async function fetchHello() {
+    output.textContent = "Fetching...";
+    try {
+      const res = await fetch(backendURL);
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      const text = await res.text();
+      output.textContent = `Backend says: "${text}"`;
+    } catch (err) {
+      output.textContent = "Error fetching backend: " + err.message;
+    }
+  }
+
+  // Button event
+  button.addEventListener("click", fetchHello);
+
+  // Extra functionality for longer file
+  function generateAsciiBox(message) {
+    const border = "+".padEnd(message.length + 3, "-") + "+";
+    return border + "\n| " + message + " |\n" + border;
+  }
+
+  // Display decorative ASCII on load
+  window.addEventListener("load", () => {
+    const box = generateAsciiBox("Euphoria Frontend Loaded");
+    console.log(box);
+  });
+
+</script>
 </body>
 </html>
