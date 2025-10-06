@@ -4,87 +4,48 @@
 <meta charset="UTF-8">
 <title>Euphoria</title>
 <style>
-  /* === UI Styling === */
   body {
     margin: 0;
-    padding: 0;
     height: 100vh;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-color: black;
+    background: black;
     color: white;
     font-family: monospace;
+    flex-direction: column;
   }
-
-  h1 { font-size: 3rem; margin-bottom: 1rem; }
   button {
-    padding: 1rem 2rem;
-    background: #111;
-    color: white;
-    border: 1px solid white;
-    cursor: pointer;
-    font-size: 1.2rem;
-    margin-bottom: 1rem;
-    transition: all 0.3s;
-  }
-  button:hover {
-    background: #222;
-    border-color: #aaa;
-  }
-  pre {
     background: #000;
-    color: #0f0;
-    padding: 1rem;
-    width: 80%;
-    max-width: 600px;
-    white-space: pre-wrap;
-    word-break: break-word;
-    border: 1px solid #0f0;
+    color: #fff;
+    border: 1px solid #fff;
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-top: 20px;
   }
+  button:hover { background: #111; }
 </style>
 </head>
 <body>
 <h1>Euphoria</h1>
-<button id="fetchBtn">Fetch "hi" from Backend</button>
-<pre id="output">Click the button to see the response...</pre>
+<button id="btn">Fetch "hi"</button>
+<pre id="out">Click button to fetch from backend...</pre>
 
 <script>
-  // === Frontend JS ===
-  const backendURL = "https://ideological-merna-maxshoener-af9383a9.koyeb.app/api/hello";
+  const out = document.getElementById("out");
+  const btn = document.getElementById("btn");
+  const url = "https://ideological-merna-maxshoener-af9383a9.koyeb.app/api/hello";
 
-  const output = document.getElementById("output");
-  const button = document.getElementById("fetchBtn");
-
-  // Fetch function
-  async function fetchHello() {
-    output.textContent = "Fetching...";
+  btn.onclick = async () => {
+    out.textContent = "Fetching...";
     try {
-      const res = await fetch(backendURL);
-      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      const res = await fetch(url);
       const text = await res.text();
-      output.textContent = `Backend says: "${text}"`;
-    } catch (err) {
-      output.textContent = "Error fetching backend: " + err.message;
+      out.textContent = text; // exact "hi"
+    } catch (e) {
+      out.textContent = "Error: " + e.message;
     }
-  }
-
-  // Button event
-  button.addEventListener("click", fetchHello);
-
-  // Extra functionality for longer file
-  function generateAsciiBox(message) {
-    const border = "+".padEnd(message.length + 3, "-") + "+";
-    return border + "\n| " + message + " |\n" + border;
-  }
-
-  // Display decorative ASCII on load
-  window.addEventListener("load", () => {
-    const box = generateAsciiBox("Euphoria Frontend Loaded");
-    console.log(box);
-  });
-
+  };
 </script>
 </body>
 </html>
