@@ -1,91 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Euphoria Proxy</title>
-<style>
-  body {
-    background: #0e0e0e;
-    color: white;
-    font-family: sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    margin: 0;
-  }
-  #controls {
-    margin-top: 1rem;
-    display: flex;
-    gap: 10px;
-  }
-  input {
-    padding: 0.4rem;
-    width: 300px;
-    border-radius: 4px;
-    border: none;
-  }
-  button {
-    padding: 0.4rem 0.8rem;
-    border: none;
-    border-radius: 4px;
-    background: #1a1a1a;
-    color: white;
-    cursor: pointer;
-  }
-  iframe {
-    width: 90%;
-    height: 70vh;
-    margin-top: 1rem;
-    border: 2px solid #333;
-    border-radius: 6px;
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Euphoria Frontend</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      color: #fff;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+      font-size: 2.5rem;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    }
+
+    button {
+      background-color: #ff4081;
+      border: none;
+      padding: 0.8rem 1.6rem;
+      font-size: 1rem;
+      color: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-bottom: 1rem;
+    }
+
+    button:hover {
+      background-color: #e73370;
+    }
+
+    pre {
+      background: rgba(0,0,0,0.3);
+      padding: 1rem;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 600px;
+      overflow-x: auto;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+
+    footer {
+      margin-top: auto;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    a {
+      color: #fff;
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
-  <h1>Euphoria Browser</h1>
-  <div id="controls">
-    <button onclick="goHome()">Home</button>
-    <button onclick="goBack()">◀ Back</button>
-    <button onclick="goForward()">▶ Forward</button>
-    <button onclick="refresh()">⟳ Refresh</button>
-    <button onclick="toggleFullscreen()">⛶ Fullscreen</button>
-    <button onclick="switchProxy()">Switch Proxy</button>
-  </div>
-  <input type="text" id="urlInput" placeholder="Enter URL and press Enter..." />
-  <iframe id="viewFrame"></iframe>
+  <h1>Euphoria Frontend</h1>
+  <button id="fetchBtn">Talk to Backend</button>
+  <pre id="output">Click the button to fetch data from the backend.</pre>
+  <footer>
+    Backend hosted at: <a href="https://ideological-merna-maxshoener-af9383a9.koyeb.app/" target="_blank">https://ideological-merna-maxshoener-af9383a9.koyeb.app/</a>
+  </footer>
 
-<script>
-let proxyMode = "uv"; // "uv" or "scramjet"
-const backend = "https://your-app-name.koyeb.app"; // 🔗 Replace with your deployed backend
+  <script>
+    const backendUrl = "https://ideological-merna-maxshoener-af9383a9.koyeb.app/api/hello";
 
-const frame = document.getElementById("viewFrame");
-const input = document.getElementById("urlInput");
+    document.getElementById("fetchBtn").addEventListener("click", async () => {
+      const output = document.getElementById("output");
+      output.textContent = "Fetching...";
 
-input.addEventListener("keydown", e => {
-  if (e.key === "Enter") loadURL();
-});
-
-function loadURL() {
-  const url = input.value.trim();
-  if (!url) return;
-  frame.src = `${backend}/${proxyMode}/?url=${encodeURIComponent(url)}`;
-}
-
-function goHome() {
-  frame.src = `${backend}`;
-}
-
-function goBack() { frame.contentWindow.history.back(); }
-function goForward() { frame.contentWindow.history.forward(); }
-function refresh() { frame.contentWindow.location.reload(); }
-function toggleFullscreen() { frame.requestFullscreen(); }
-function switchProxy() {
-  proxyMode = proxyMode === "uv" ? "scramjet" : "uv";
-  alert(`Switched to ${proxyMode.toUpperCase()} proxy`);
-}
-</script>
+      try {
+        const res = await fetch(backendUrl);
+        if (!res.ok) throw new Error(res.status + " " + res.statusText);
+        const data = await res.json();
+        output.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        output.textContent = "Error: " + err.message;
+      }
+    });
+  </script>
 </body>
 </html>
