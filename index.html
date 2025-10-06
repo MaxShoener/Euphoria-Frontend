@@ -21,31 +21,60 @@
     border: 1px solid #fff;
     padding: 10px 20px;
     cursor: pointer;
-    margin-top: 20px;
+    margin: 10px;
   }
   button:hover { background: #111; }
+  pre { margin-top: 15px; }
 </style>
 </head>
 <body>
 <h1>Euphoria</h1>
-<button id="btn">Fetch "hi"</button>
-<pre id="out">Click button to fetch from backend...</pre>
+
+<button id="btnHello">Fetch "hi"</button>
+<button id="btnTime">Fetch Server Time</button>
+<button id="btnMessages">Fetch Messages</button>
+
+<pre id="out">Click a button to interact with the backend...</pre>
 
 <script>
-  const out = document.getElementById("out");
-  const btn = document.getElementById("btn");
-  const url = "https://ideological-merna-maxshoener-af9383a9.koyeb.app/api/hello";
+const out = document.getElementById("out");
+const urlBase = "https://ideological-merna-maxshoener-af9383a9.koyeb.app/api";
 
-  btn.onclick = async () => {
-    out.textContent = "Fetching...";
-    try {
-      const res = await fetch(url);
-      const text = await res.text();
-      out.textContent = text; // exact "hi"
-    } catch (e) {
-      out.textContent = "Error: " + e.message;
-    }
-  };
+// Fetch hi
+document.getElementById("btnHello").onclick = async () => {
+  out.textContent = "Fetching...";
+  try {
+    const res = await fetch(urlBase + "/hello");
+    const text = await res.text();
+    out.textContent = text;
+  } catch (e) {
+    out.textContent = "Error: " + e.message;
+  }
+};
+
+// Fetch server time
+document.getElementById("btnTime").onclick = async () => {
+  out.textContent = "Fetching...";
+  try {
+    const res = await fetch(urlBase + "/time");
+    const json = await res.json();
+    out.textContent = JSON.stringify(json, null, 2);
+  } catch (e) {
+    out.textContent = "Error: " + e.message;
+  }
+};
+
+// Fetch messages
+document.getElementById("btnMessages").onclick = async () => {
+  out.textContent = "Fetching...";
+  try {
+    const res = await fetch(urlBase + "/messages");
+    const json = await res.json();
+    out.textContent = JSON.stringify(json, null, 2);
+  } catch (e) {
+    out.textContent = "Error: " + e.message;
+  }
+};
 </script>
 </body>
 </html>
