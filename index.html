@@ -2,131 +2,69 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Euphoria Proxy</title>
 <style>
-  :root {
-    --bg: #000;
-    --fg: #0f0;
-    --border: #0a0;
-  }
-  body {
-    background: var(--bg);
-    color: var(--fg);
-    font-family: "Consolas", "Courier New", monospace;
-    margin: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-  #toolbar {
-    background: #080808;
-    border-bottom: 1px solid var(--border);
-    padding: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  button, input {
-    background: #000;
-    color: var(--fg);
-    border: 1px solid var(--border);
-    padding: 8px 12px;
-    font-size: 14px;
-    border-radius: 4px;
-    outline: none;
-  }
-  input {
-    width: 45%;
-  }
-  button:hover {
-    background: #0f0;
-    color: #000;
-  }
-  #status {
-    text-align: right;
-    padding: 4px 12px;
-    font-size: 12px;
-    border-bottom: 1px solid var(--border);
-  }
-  iframe {
-    flex: 1;
-    border: none;
-    width: 100%;
-    background: #111;
-  }
+  body { margin:0; font-family:sans-serif; background:#000; color:#fff; }
+  #topbar { background:#111; padding:10px; display:flex; align-items:center; }
+  #url { flex:1; padding:5px; font-size:16px; background:#222; color:#fff; border:none; }
+  #enter { padding:5px 10px; margin-left:5px; }
+  #fullscreen { padding:5px 10px; margin-left:5px; }
+  #engine { margin-left:10px; }
+  iframe { width:100%; height:calc(100vh-50px); border:none; display:block; }
+  .hidden { display:none; }
 </style>
 </head>
 <body>
-  <div id="toolbar">
-    <button id="back">←</button>
-    <button id="forward">→</button>
-    <button id="refresh">⟳</button>
-    <button id="home">⌂</button>
-    <input id="url" placeholder="Enter URL...">
-    <button id="go">Go</button>
-    <button id="fullscreen">⛶</button>
-    <button id="switch">Switch Engine</button>
-  </div>
-  <div id="status">Engine: loading...</div>
-  <iframe id="view" src=""></iframe>
+<div id="topbar">
+  <input id="url" placeholder="Enter URL..." />
+  <button id="enter">Go</button>
+  <select id="engine">
+    <option value="ultraviolet">Ultraviolet</option>
+    <option value="scramjet">Scramjet</option>
+  </select>
+  <button id="fullscreen">Fullscreen</button>
+</div>
+<iframe id="frame"></iframe>
 
 <script>
-const backend = "https://ideological-merna-maxshoener-af9383a9.koyeb.app";
-const frame = document.getElementById("view");
-const urlBox = document.getElementById("url");
-const statusBox = document.getElementById("status");
-let engine = "ultraviolet";
-let lastURL = "";
+const urlInput = document.getElementById("url");
+const enterBtn = document.getElementById("enter");
+const engineSelect = document.getElementById("engine");
+const iframe = document.getElementById("frame");
+const fullscreenBtn = document.getElementById("fullscreen");
+const topbar = document.getElementById("topbar");
 
-async function updateEngineDisplay() {
+async function setEngine(engine) {
+  await fetch("http://localhost:3000/engine", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ engine })
+  });
+}
+
+engineSelect.addEventListener("change", () => setEngine(engineSelect.value));
+
+async function navigate() {
+  const url = encodeURIComponent(urlInput.value);
   try {
-    const res = await fetch(`${backend}/engine`);
-    const j = await res.json();
-    engine = j.engine;
-    statusBox.textContent = "Engine: " + engine;
+    iframe.src = `http://localhost:3000/proxy?url=${url}`;
   } catch {
-    statusBox.textContent = "Engine: offline";
+    alert("Engine may be temporarily down.");
   }
 }
 
-async function go(url) {
-  if (!url.trim()) return;
-  if (!/^https?:\/\//i.test(url)) url = "https://" + url;
-  lastURL = url;
-  urlBox.value = url;
-  try {
-    frame.src = `${backend}/proxy?url=${encodeURIComponent(url)}`;
-  } catch {
-    alert("Error loading site. Try switching engines or refreshing.");
-  }
-}
+enterBtn.addEventListener("click", navigate);
+urlInput.addEventListener("keyup", e => { if(e.key === "Enter") navigate(); });
 
-document.getElementById("go").onclick = () => go(urlBox.value);
-document.getElementById("home").onclick = () => go("https://example.com");
-document.getElementById("refresh").onclick = () => frame.src = `${backend}/proxy?url=${encodeURIComponent(lastURL)}`;
-document.getElementById("back").onclick = () => frame.contentWindow?.history?.back?.();
-document.getElementById("forward").onclick = () => frame.contentWindow?.history?.forward?.();
-document.getElementById("fullscreen").onclick = async () => {
-  if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
-  else await document.exitFullscreen();
-};
-document.getElementById("switch").onclick = async () => {
-  const newEngine = engine === "ultraviolet" ? "scramjet" : "ultraviolet";
-  try {
-    const res = await fetch(`${backend}/engine?set=${newEngine}`);
-    const j = await res.json();
-    engine = j.engine;
-    statusBox.textContent = "Engine: " + engine;
-  } catch {
-    statusBox.textContent = "Engine: switch failed";
+fullscreenBtn.addEventListener("click", () => {
+  if (!document.fullscreenElement) {
+    topbar.classList.add("hidden");
+    document.documentElement.requestFullscreen();
+  } else {
+    topbar.classList.remove("hidden");
+    document.exitFullscreen();
   }
-};
-
-// Run on load
-updateEngineDisplay();
+});
 </script>
 </body>
 </html>
