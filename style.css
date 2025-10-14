@@ -1,0 +1,23 @@
+/* Clean black UI — a bit longer with explanatory comments for size */
+* { box-sizing: border-box; }
+html,body { height: 100%; margin: 0; background: #000; color: #ddd; font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+#topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: linear-gradient(0deg, rgba(255,255,255,0.02), rgba(255,255,255,0.02));
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+#topbar button, #topbar select { background: rgba(255,255,255,0.03); border: none; color: #ddd; padding: 8px 10px; border-radius: 6px; cursor: pointer; }
+#topbar button:hover, #topbar select:hover { background: rgba(255,255,255,0.06); }
+#left-buttons { display:flex; gap:8px; align-items:center; }
+#right-buttons { margin-left:auto; display:flex; gap:8px; align-items:center; }
+#address { display:flex; gap:8px; align-items:center; flex:1; max-width:920px; margin: 0 12px; }
+#urlInput { flex:1; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.04); color: #eee; padding: 10px 12px; border-radius: 8px; outline: none; }
+#goBtn { min-width:60px; }
+#frame-wrap { position:absolute; top:56px; bottom:28px; left:0; right:0; padding: 8px; }
+#iframe, iframe, #view { width:100%; height:100%; border-radius: 6px; border: 1px solid rgba(255,255,255,0.03); background: #111; }
+iframe { width:100%; height:100%; border: none; }
+#status { position: absolute; left: 8px; bottom: 0; height: 28px; display:flex; align-items:center; gap:12px; padding:6px 10px; color:#bbb; font-size:13px; background: linear-gradient(180deg, rgba(0,0,0,0.4), rgba(0,0,0,0.6)); }
+#status small { color:#9aa; }
