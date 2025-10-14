@@ -2,21 +2,45 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Euphoria Proxy</title>
 <style>
-  body { margin:0; font-family:sans-serif; background:#000; color:#fff; }
-  #topbar { background:#111; padding:10px; display:flex; align-items:center; }
-  #url { flex:1; padding:5px; font-size:16px; background:#222; color:#fff; border:none; }
-  #enter { padding:5px 10px; margin-left:5px; }
-  #fullscreen { padding:5px 10px; margin-left:5px; }
-  #engine { margin-left:10px; }
-  iframe { width:100%; height:calc(100vh-50px); border:none; display:block; }
-  .hidden { display:none; }
+  html, body { margin:0; padding:0; background:#000; color:#fff; height:100%; font-family:sans-serif; }
+  #topbar {
+    display:flex;
+    align-items:center;
+    padding:10px;
+    background:#111;
+  }
+  #url {
+    flex:1;
+    padding:5px;
+    background:#222;
+    color:#fff;
+    border:none;
+    outline:none;
+  }
+  button, select {
+    margin-left:5px;
+    padding:5px 10px;
+    background:#222;
+    color:#fff;
+    border:none;
+    cursor:pointer;
+  }
+  button:hover, select:hover { background:#333; }
+  iframe {
+    width:100%;
+    height:calc(100vh - 50px);
+    border:none;
+    display:block;
+  }
 </style>
 </head>
 <body>
+
 <div id="topbar">
-  <input id="url" placeholder="Enter URL..." />
+  <input id="url" type="text" placeholder="Enter URL..." />
   <button id="enter">Go</button>
   <select id="engine">
     <option value="ultraviolet">Ultraviolet</option>
@@ -24,47 +48,48 @@
   </select>
   <button id="fullscreen">Fullscreen</button>
 </div>
+
 <iframe id="frame"></iframe>
 
 <script>
-const urlInput = document.getElementById("url");
-const enterBtn = document.getElementById("enter");
-const engineSelect = document.getElementById("engine");
-const iframe = document.getElementById("frame");
-const fullscreenBtn = document.getElementById("fullscreen");
-const topbar = document.getElementById("topbar");
+const BACKEND_URL = "https://ideological-merna-maxshoener-af9383a9.koyeb.app";
+const urlInput = document.getElementById('url');
+const enterBtn = document.getElementById('enter');
+const engineSelect = document.getElementById('engine');
+const fullscreenBtn = document.getElementById('fullscreen');
+const frame = document.getElementById('frame');
 
-async function setEngine(engine) {
-  await fetch("http://localhost:3000/engine", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ engine })
-  });
-}
+// Go button action
+enterBtn.addEventListener('click', () => {
+  let url = encodeURIComponent(urlInput.value.trim());
+  if (!url) return;
+  let engine = engineSelect.value;
+  frame.src = `${BACKEND_URL}/proxy?engine=${engine}&url=${url}`;
+});
 
-engineSelect.addEventListener("change", () => setEngine(engineSelect.value));
+// Enter key support
+urlInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') enterBtn.click();
+});
 
-async function navigate() {
-  const url = encodeURIComponent(urlInput.value);
-  try {
-    iframe.src = `http://localhost:3000/proxy?url=${url}`;
-  } catch {
-    alert("Engine may be temporarily down.");
-  }
-}
-
-enterBtn.addEventListener("click", navigate);
-urlInput.addEventListener("keyup", e => { if(e.key === "Enter") navigate(); });
-
-fullscreenBtn.addEventListener("click", () => {
+// Fullscreen toggle
+fullscreenBtn.addEventListener('click', () => {
   if (!document.fullscreenElement) {
-    topbar.classList.add("hidden");
     document.documentElement.requestFullscreen();
   } else {
-    topbar.classList.remove("hidden");
     document.exitFullscreen();
   }
 });
+
+// Optionally, select engine from backend if needed
+engineSelect.addEventListener('change', () => {
+  if (frame.src) {
+    const url = new URL(frame.src);
+    url.searchParams.set('engine', engineSelect.value);
+    frame.src = url.toString();
+  }
+});
 </script>
+
 </body>
 </html>
