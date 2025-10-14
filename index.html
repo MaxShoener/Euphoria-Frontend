@@ -1,199 +1,115 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Euphoria — lightweight browser UI</title>
-<link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Euphoria Proxy</title>
+<style>
+  body {
+    background: #000;
+    color: #0f0;
+    font-family: monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+  }
+  #toolbar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #111;
+    width: 100%;
+    padding: 8px;
+    border-bottom: 1px solid #0f0;
+  }
+  button {
+    background: #000;
+    color: #0f0;
+    border: 1px solid #0f0;
+    padding: 6px 10px;
+    margin: 0 4px;
+    cursor: pointer;
+  }
+  input {
+    background: #000;
+    color: #0f0;
+    border: 1px solid #0f0;
+    padding: 6px;
+    width: 40%;
+    margin: 0 6px;
+  }
+  iframe {
+    flex: 1;
+    width: 100%;
+    border: none;
+  }
+  #status {
+    position: absolute;
+    top: 8px;
+    right: 16px;
+    font-size: 12px;
+  }
+</style>
 </head>
 <body>
-  <div id="topbar">
-    <div id="left-buttons">
-      <button id="backBtn" title="Back">◀</button>
-      <button id="forwardBtn" title="Forward">▶</button>
-      <button id="refreshBtn" title="Refresh">⟳</button>
-      <button id="homeBtn" title="Home">🏠</button>
-    </div>
-
-    <div id="address">
-      <input id="urlInput" type="text" placeholder="https://example.com" />
-      <button id="goBtn" title="Go">Go</button>
-    </div>
-
-    <div id="right-buttons">
-      <button id="fullscreenBtn" title="Fullscreen">⛶</button>
-      <select id="engineSelect" title="Proxy Engine">
-        <option value="ultraviolet">ultraviolet</option>
-        <option value="scramjet">scramjet</option>
-      </select>
-      <button id="switchEngineBtn" title="Switch proxy engine">Switch Proxy</button>
-    </div>
+  <div id="toolbar">
+    <button id="back">←</button>
+    <button id="forward">→</button>
+    <button id="refresh">⟳</button>
+    <button id="home">⌂</button>
+    <input id="url" placeholder="Enter URL...">
+    <button id="go">Go</button>
+    <button id="fullscreen">⛶</button>
+    <button id="switch">Switch Proxy</button>
   </div>
-
-  <div id="frame-wrap">
-    <iframe id="view" src="about:blank" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-modals"></iframe>
-  </div>
-
-  <div id="status">
-    <span id="engineStatus">engine:</span>
-    <span id="lastError" style="color:#f66"></span>
-  </div>
+  <div id="status">Engine: loading...</div>
+  <iframe id="view" src=""></iframe>
 
 <script>
-/*
-  Frontend logic:
-   - Uses the backend_base to call /proxy?url=<target>
-   - Maintains an internal history stack for back/forward
-   - Switches engine via GET /engine?set=<engine>
-   - Opened via file:// so we use absolute backend URL, and CORS is allowed by backend
-*/
+const backend = "https://ideological-merna-maxshoener-af9383a9.koyeb.app";
+const frame = document.getElementById("view");
+const urlBox = document.getElementById("url");
+const statusBox = document.getElementById("status");
+let engine = "ultraviolet";
 
-const BACKEND_BASE = 'https://ideological-merna-maxshoener-af9383a9.koyeb.app'; 
-// <-- Replace with your backend URL if different
-
-const goBtn = document.getElementById('goBtn');
-const backBtn = document.getElementById('backBtn');
-const forwardBtn = document.getElementById('forwardBtn');
-const refreshBtn = document.getElementById('refreshBtn');
-const homeBtn = document.getElementById('homeBtn');
-const urlInput = document.getElementById('urlInput');
-const engineSelect = document.getElementById('engineSelect');
-const switchEngineBtn = document.getElementById('switchEngineBtn');
-const fullscreenBtn = document.getElementById('fullscreenBtn');
-const engineStatus = document.getElementById('engineStatus');
-const lastError = document.getElementById('lastError');
-const iframe = document.getElementById('view');
-
-let historyStack = [];
-let historyPos = -1;
-const HOME = 'https://example.com'; // change if you want another home
-
-function setStatus(text) {
-  engineStatus.textContent = 'engine: ' + text;
-}
-
-async function refreshEngineStatus() {
+async function loadEngine() {
   try {
-    const r = await fetch(BACKEND_BASE + '/engine');
-    const j = await r.json();
-    setStatus(j.engine || 'unknown');
-  } catch (e) {
-    setStatus('offline');
-  }
-}
-refreshEngineStatus();
-
-async function setEngine(name) {
-  lastError.textContent = '';
-  try {
-    const r = await fetch(BACKEND_BASE + '/engine?set=' + encodeURIComponent(name));
-    const j = await r.json();
-    if (r.ok) {
-      setStatus(j.engine);
-    } else {
-      lastError.textContent = 'engine switch failed';
-      setStatus('error');
-    }
-  } catch (e) {
-    lastError.textContent = 'failed to switch engine';
+    const res = await fetch(`${backend}/engine`);
+    const j = await res.json();
+    engine = j.engine;
+    statusBox.textContent = "Engine: " + engine;
+  } catch {
+    statusBox.textContent = "Engine: offline";
   }
 }
 
-switchEngineBtn.addEventListener('click', () => {
-  const name = engineSelect.value;
-  setEngine(name);
-});
-
-goBtn.addEventListener('click', () => {
-  let target = urlInput.value.trim();
-  if (!/^https?:\/\//.test(target)) {
-    target = 'https://' + target;
-  }
-  navigateTo(target);
-});
-
-urlInput.addEventListener('keyup', (ev) => {
-  if (ev.key === 'Enter') goBtn.click();
-});
-
-backBtn.addEventListener('click', () => {
-  if (historyPos > 0) {
-    historyPos--;
-    const url = historyStack[historyPos];
-    loadUrlIntoIframe(url, false);
-  }
-});
-
-forwardBtn.addEventListener('click', () => {
-  if (historyPos < historyStack.length - 1) {
-    historyPos++;
-    const url = historyStack[historyPos];
-    loadUrlIntoIframe(url, false);
-  }
-});
-
-refreshBtn.addEventListener('click', () => {
-  if (historyPos >= 0) {
-    loadUrlIntoIframe(historyStack[historyPos], true);
-  }
-});
-
-homeBtn.addEventListener('click', () => navigateTo(HOME));
-
-fullscreenBtn.addEventListener('click', async () => {
-  if (!document.fullscreenElement) {
-    await document.documentElement.requestFullscreen();
-  } else {
-    await document.exitFullscreen();
-  }
-});
-
-function navigateTo(target) {
-  // push history
-  if (historyPos < historyStack.length - 1) {
-    historyStack = historyStack.slice(0, historyPos+1);
-  }
-  historyStack.push(target);
-  historyPos = historyStack.length - 1;
-  loadUrlIntoIframe(target, false);
+async function go(url) {
+  if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+  urlBox.value = url;
+  frame.src = `${backend}/proxy?url=${encodeURIComponent(url)}`;
 }
 
-function setIframeSrcToProxy(target) {
-  // load proxied content served by backend under its origin
-  iframe.src = BACKEND_BASE + '/proxy?url=' + encodeURIComponent(target);
-}
+document.getElementById("go").onclick = () => go(urlBox.value);
+document.getElementById("home").onclick = () => go("example.com");
+document.getElementById("refresh").onclick = () => frame.contentWindow.location.reload();
+document.getElementById("back").onclick = () => frame.contentWindow.history.back();
+document.getElementById("forward").onclick = () => frame.contentWindow.history.forward();
+document.getElementById("fullscreen").onclick = async () => {
+  if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+  else await document.exitFullscreen();
+};
+document.getElementById("switch").onclick = async () => {
+  const newEngine = engine === "ultraviolet" ? "scramjet" : "ultraviolet";
+  const res = await fetch(`${backend}/engine?set=${newEngine}`);
+  const j = await res.json();
+  engine = j.engine;
+  statusBox.textContent = "Engine: " + engine;
+};
 
-function loadUrlIntoIframe(target, forceReload) {
-  lastError.textContent = '';
-  urlInput.value = target;
-  // If same target and not forceReload, do nothing
-  const current = iframe.src;
-  const desired = BACKEND_BASE + '/proxy?url=' + encodeURIComponent(target);
-  if (!forceReload && current === desired) return;
-  try {
-    setIframeSrcToProxy(target);
-  } catch (e) {
-    lastError.textContent = 'failed to set iframe src';
-  }
-}
-
-// initialize with home
-urlInput.value = HOME;
-navigateTo(HOME);
-
-// small debug helper to show backend health
-async function updateHealth() {
-  try {
-    const r = await fetch(BACKEND_BASE + '/health');
-    const j = await r.json();
-    // show engine and status
-    setStatus(j.engine || 'unknown');
-  } catch (e) {
-    setStatus('offline');
-  }
-}
-setInterval(updateHealth, 5000);
-
+loadEngine();
 </script>
 </body>
 </html>
